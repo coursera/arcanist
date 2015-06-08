@@ -46,7 +46,10 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
     $webPath = $_SERVER['HOME'].'/base/coursera/web/';
     $escapedWebPath = preg_quote($webPath, '/');
 
-    preg_match('/'.$escapedWebPath.'(.*)/', $absolutePath, $matches);
+    if (!preg_match('/'.$escapedWebPath.'(.*)/', $absolutePath, $matches)) {
+      return;
+    }
+
     $relPath = $matches[1];
 
     if (strstr($relPath, '/test/')) {
