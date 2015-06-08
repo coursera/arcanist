@@ -46,18 +46,21 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
     $webPath = $_SERVER['HOME'].'/base/coursera/web/';
     $escapedWebPath = preg_quote($webPath, '/');
 
-    if (strstr($path, '/test/')) {
-      return; // test files aren't path linted y
-    } else if (preg_match('/'.$escapedWebPath.'([^_]*)__styles__\/(.+).styl/', $absolutePath, $matches)) {
+    preg_match('/'.$escapedWebPath.'(.*)/', $absolutePath, $matches);
+    $relPath = $matches[1];
+
+    if (strstr($relPath, '/test/')) {
+      return; // test files aren't path linted yet
+    } else if (preg_match('/([^_]*)__styles__\/(.+).styl/', $relPath, $matches)) {
       $jsxFilename = $matches[1].$matches[2].'.jsx';
 
-      if (!file_exists(realpath($jsxFilename)))
+      if (!file_exists($jsxFilename))
         $this->raiseLintAtPath(
           self::MISPLACED_COMPONENT_STYL,
           pht(
             'Stylus files in __styles__ must correspond to a React component in the parent directory.'));
 
-    } else if (preg_match('/'.$escapedWebPath.'static\/bundles\/([^\/]+)\/components/', $absolutePath, $matches)) {
+    } else if (preg_match('/^static\/bundles\/([^\/]+)\/components/', $relPath, $matches)) {
       $bundleName = $matches[1];
 
       if ($bundleName != strtolower($bundleName))
@@ -66,7 +69,7 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
           pht(
             'Bundle names must be lowercase.'));
 
-      $nlsPath = $webPath.'static/nls/'.$bundleName.'.js';
+      $nlsPath = 'static/nls/'.$bundleName.'.js';
       if (!file_exists($nlsPath))
         $this->raiseLintAtPath(
           self::MISSING_BUNDLE_NLS,
@@ -74,7 +77,7 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
             'Every bundle with components must have an NLS file. To solve:'."\n".
             '$ echo "define({});" > '.$nlsPath));
 
-    } else if (preg_match('/'.$escapedWebPath.'static\/(.+)\/components/', $absolutePath)) {
+    } else if (preg_match('/^static\/(.+)\/components/', $relPath)) {
       $this->raiseLintAtPath(
         self::MISPLACED_COMPONENT,
         pht(
