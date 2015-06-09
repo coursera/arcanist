@@ -9,6 +9,7 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
   const MISSING_BUNDLE_NLS = 2;
   const MISPLACED_COMPONENT = 3;
   const MISPLACED_COMPONENT_STYL = 4;
+  const WEB_REPO = '/base/coursera/web/';
 
   public function getInfoName() {
     return pht('Couserorg');
@@ -43,7 +44,7 @@ final class ArcanistCouserorgLinter extends ArcanistLinter {
 
   public function lintPath($path) {
     $absolutePath = realpath($path);
-    $webPath = $_SERVER['HOME'].'/base/coursera/web/';
+    $webPath = $_SERVER['HOME'].self::WEB_REPO;
     $escapedWebPath = preg_quote($webPath, '/');
 
     if (!preg_match('/'.$escapedWebPath.'(.*)/', $absolutePath, $matches)) {
