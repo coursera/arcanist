@@ -74,17 +74,27 @@ $config = null;
 $workflow = null;
 
 try {
+  if ($config_trace_mode) {
+    echo tsprintf(
+      "**<bg:magenta> %s </bg>** %s\n",
+      pht('ARGV'),
+      csprintf('%Ls', $original_argv));
 
-  $console->writeLog(
-    "%s\n",
-    pht(
-      "libphutil loaded from '%s'.",
-      phutil_get_library_root('phutil')));
-  $console->writeLog(
-    "%s\n",
-    pht(
-      "arcanist loaded from '%s'.",
-      phutil_get_library_root('arcanist')));
+    $libraries = array(
+      'phutil',
+      'arcanist',
+    );
+
+    foreach ($libraries as $library_name) {
+      echo tsprintf(
+        "**<bg:magenta> %s </bg>** %s\n",
+        pht('LOAD'),
+        pht(
+          'Loaded "%s" from "%s".',
+          $library_name,
+          phutil_get_library_root($library_name)));
+    }
+  }
 
   if (!$args) {
     if ($help) {
@@ -422,7 +432,7 @@ try {
       }
     }
 
-    echo fwrite(STDERR, phutil_console_format(
+    fwrite(STDERR, phutil_console_format(
       "(%s)\n",
       pht('Run with `%s` for a full exception trace.', '--trace')));
   }
@@ -620,9 +630,9 @@ function arcanist_load_libraries(
         throw new ArcanistUsageException($error);
       } else {
         fwrite(STDERR, phutil_console_wrap(
-          "%s: %s\n\n",
-          pht('WARNING'),
-          $error));
+          phutil_console_format("%s: %s\n",
+                                pht('WARNING'),
+                                $error)));
       }
     } catch (PhutilLibraryConflictException $ex) {
       if ($ex->getLibrary() != 'arcanist') {

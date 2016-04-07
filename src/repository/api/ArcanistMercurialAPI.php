@@ -250,7 +250,7 @@ final class ArcanistMercurialAPI extends ArcanistRepositoryAPI {
         list($node, $rev, $full_author, $date, $branch, $tag,
           $parents, $desc) = explode("\1", $log, 9);
 
-        list ($author, $author_email) = $this->parseFullAuthor($full_author);
+        list($author, $author_email) = $this->parseFullAuthor($full_author);
 
         // NOTE: If a commit has only one parent, {parents} returns empty.
         // If it has two parents, {parents} returns revs and short hashes, not
@@ -360,7 +360,7 @@ final class ArcanistMercurialAPI extends ArcanistRepositoryAPI {
 
     $working_status = ArcanistMercurialParser::parseMercurialStatus($stdout);
     foreach ($working_status as $path => $mask) {
-      if (!($mask & ArcanistRepositoryAPI::FLAG_UNTRACKED)) {
+      if (!($mask & parent::FLAG_UNTRACKED)) {
         // Mark tracked files as uncommitted.
         $mask |= self::FLAG_UNCOMMITTED;
       }
@@ -535,7 +535,7 @@ final class ArcanistMercurialAPI extends ArcanistRepositoryAPI {
 
   public function supportsRebase() {
     if ($this->supportsRebase === null) {
-      list ($err) = $this->execManualLocal('help rebase');
+      list($err) = $this->execManualLocal('help rebase');
       $this->supportsRebase = $err === 0;
     }
 
@@ -544,7 +544,7 @@ final class ArcanistMercurialAPI extends ArcanistRepositoryAPI {
 
   public function supportsPhases() {
     if ($this->supportsPhases === null) {
-      list ($err) = $this->execManualLocal('help phase');
+      list($err) = $this->execManualLocal('help phase');
       $this->supportsPhases = $err === 0;
     }
 

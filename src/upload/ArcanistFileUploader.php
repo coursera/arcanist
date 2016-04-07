@@ -26,7 +26,7 @@
 final class ArcanistFileUploader extends Phobject {
 
   private $conduit;
-  private $files;
+  private $files = array();
 
 
 /* -(  Configuring the Uploader  )------------------------------------------- */
@@ -116,13 +116,23 @@ final class ArcanistFileUploader extends Phobject {
     $conduit = $this->conduit;
     $futures = array();
     foreach ($files as $key => $file) {
-      $futures[$key] = $conduit->callMethod(
-        'file.allocate',
-        array(
-          'name' => $file->getName(),
-          'contentLength' => $file->getByteSize(),
-          'contentHash' => $file->getContentHash(),
-        ));
+      $params = array(
+        'name' => $file->getName(),
+        'contentLength' => $file->getByteSize(),
+        'contentHash' => $file->getContentHash(),
+      );
+
+      $delete_after = $file->getDeleteAfterEpoch();
+      if ($delete_after !== null) {
+        $params['deleteAfterEpoch'] = $delete_after;
+      }
+
+      $view_policy = $file->getViewPolicy();
+      if ($view_policy !== null) {
+        $params['viewPolicy'] = $view_policy;
+      }
+
+      $futures[$key] = $conduit->callMethod('file.allocate', $params);
     }
 
     $iterator = id(new FutureIterator($futures))->limit(4);
@@ -235,14 +245,14 @@ final class ArcanistFileUploader extends Phobject {
     if ($done) {
       $this->writeStatus(
         pht(
-          'Resuming upload (%d of %d chunks remain).',
-          new PhutilNumber(count($remaining)),
-          new PhutilNumber(count($chunks))));
+          'Resuming upload (%s of %s chunks remain).',
+          phutil_count($remaining),
+          phutil_count($chunks)));
     } else {
       $this->writeStatus(
         pht(
-          'Uploading chunks (%d chunks to upload).',
-          new PhutilNumber(count($remaining))));
+          'Uploading chunks (%s chunks to upload).',
+          phutil_count($remaining)));
     }
 
     $progress = new PhutilConsoleProgressBar();

@@ -7,7 +7,19 @@
  */
 final class NoseTestEngine extends ArcanistUnitTestEngine {
 
+  private $parser;
+
+  protected function supportsRunAllTests() {
+    return true;
+  }
+
   public function run() {
+    if ($this->getRunAllTests()) {
+      $root = $this->getWorkingCopy()->getProjectRoot();
+      $all_tests = glob(Filesystem::resolvePath("$root/tests/**/test_*.py"));
+      return $this->runTests($all_tests, $root);
+    }
+
     $paths = $this->getPaths();
 
     $affected_tests = array();
@@ -137,14 +149,14 @@ final class NoseTestEngine extends ArcanistUnitTestEngine {
       for ($ii = 0; $ii < $lines->length; $ii++) {
         $line = $lines->item($ii);
 
-        $next_line = intval($line->getAttribute('number'));
+        $next_line = (int)$line->getAttribute('number');
         for ($start_line; $start_line < $next_line; $start_line++) {
           $coverage .= 'N';
         }
 
-        if (intval($line->getAttribute('hits')) == 0) {
+        if ((int)$line->getAttribute('hits') == 0) {
           $coverage .= 'U';
-        } else if (intval($line->getAttribute('hits')) > 0) {
+        } else if ((int)$line->getAttribute('hits') > 0) {
           $coverage .= 'C';
         }
 

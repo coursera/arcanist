@@ -32,6 +32,11 @@ EOTEXT
       'json' => array(
         'help' => pht('Output upload information in JSON format.'),
       ),
+      'temporary' => array(
+        'help' => pht(
+          'Mark the file as temporary. Temporary files will be deleted '.
+          'automatically after 24 hours.'),
+      ),
       '*' => 'paths',
     );
   }
@@ -51,16 +56,23 @@ EOTEXT
   }
 
   public function run() {
+    $is_temporary = $this->getArgument('temporary');
+
     $conduit = $this->getConduit();
     $results = array();
 
     $uploader = id(new ArcanistFileUploader())
       ->setConduitClient($conduit);
 
-    foreach ($this->paths as $path) {
+    foreach ($this->paths as $key => $path) {
       $file = id(new ArcanistFileDataRef())
         ->setName(basename($path))
         ->setPath($path);
+
+      if ($is_temporary) {
+        $expires_at = time() + phutil_units('24 hours in seconds');
+        $file->setDeleteAfterEpoch($expires_at);
+      }
 
       $uploader->addFile($file);
     }
@@ -131,14 +143,14 @@ EOTEXT
     if ($done) {
       $this->writeStatus(
         pht(
-          'Resuming upload (%d of %d chunks remain).',
-          new PhutilNumber(count($remaining)),
-          new PhutilNumber(count($chunks))));
+          'Resuming upload (%s of %s chunks remain).',
+          phutil_count($remaining),
+          phutil_count($chunks)));
     } else {
       $this->writeStatus(
         pht(
-          'Uploading chunks (%d chunks to upload).',
-          new PhutilNumber(count($remaining))));
+          'Uploading chunks (%s chunks to upload).',
+          phutil_count($remaining)));
     }
 
     $progress = new PhutilConsoleProgressBar();

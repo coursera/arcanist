@@ -57,7 +57,6 @@ abstract class ArcanistLintEngine extends Phobject {
   private $changedLines = array();
 
   private $enableAsyncLint = false;
-  private $postponedLinters = array();
   private $configurationManager;
 
   private $linterResources = array();
@@ -218,6 +217,8 @@ abstract class ArcanistLintEngine extends Phobject {
 
     foreach ($runnable as $linter) {
       foreach ($linter->getLintMessages() as $message) {
+        $this->validateLintMessage($linter, $message);
+
         if (!$this->isSeverityEnabled($message->getSeverity())) {
           continue;
         }
@@ -403,15 +404,6 @@ abstract class ArcanistLintEngine extends Phobject {
     return array($line, $char);
   }
 
-  final public function getPostponedLinters() {
-    return $this->postponedLinters;
-  }
-
-  final public function setPostponedLinters(array $linters) {
-    $this->postponedLinters = $linters;
-    return $this;
-  }
-
   protected function getCacheVersion() {
     return 1;
   }
@@ -471,6 +463,8 @@ abstract class ArcanistLintEngine extends Phobject {
   }
 
   private function executeLinters(array $runnable) {
+    assert_instances_of($runnable, 'ArcanistLinter');
+
     $all_paths = $this->getPaths();
     $path_chunks = array_chunk($all_paths, 32, $preserve_keys = true);
 
@@ -606,5 +600,18 @@ abstract class ArcanistLintEngine extends Phobject {
     $this->endLintServiceCall($call_id);
   }
 
+  private function validateLintMessage(
+    ArcanistLinter $linter,
+    ArcanistLintMessage $message) {
+
+    $name = $message->getName();
+    if (!strlen($name)) {
+      throw new Exception(
+        pht(
+          'Linter "%s" generated a lint message that is invalid because it '.
+          'does not have a name. Lint messages must have a name.',
+          get_class($linter)));
+    }
+  }
 
 }

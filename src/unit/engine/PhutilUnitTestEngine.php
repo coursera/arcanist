@@ -5,6 +5,10 @@
  */
 final class PhutilUnitTestEngine extends ArcanistUnitTestEngine {
 
+  public function getEngineConfigurationName() {
+    return 'phutil';
+  }
+
   protected function supportsRunAllTests() {
     return true;
   }
@@ -215,10 +219,6 @@ final class PhutilUnitTestEngine extends ArcanistUnitTestEngine {
     }
 
     return $paths;
-  }
-
-  public function shouldEchoTestResults() {
-    return !$this->renderer;
   }
 
 }

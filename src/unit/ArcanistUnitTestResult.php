@@ -10,7 +10,6 @@ final class ArcanistUnitTestResult extends Phobject {
   const RESULT_SKIP         = 'skip';
   const RESULT_BROKEN       = 'broken';
   const RESULT_UNSOUND      = 'unsound';
-  const RESULT_POSTPONED    = 'postponed';
 
   private $namespace;
   private $name;
@@ -129,13 +128,22 @@ final class ArcanistUnitTestResult extends Phobject {
 
     $base = reset($coverage);
     foreach ($coverage as $more_coverage) {
-      $len = min(strlen($base), strlen($more_coverage));
+      $base_len = strlen($base);
+      $more_len = strlen($more_coverage);
+
+      $len = min($base_len, $more_len);
       for ($ii = 0; $ii < $len; $ii++) {
         if ($more_coverage[$ii] == 'C') {
           $base[$ii] = 'C';
         }
       }
+
+      // If a secondary report has more data, copy all of it over.
+      if ($more_len > $base_len) {
+        $base .= substr($more_coverage, $base_len);
+      }
     }
+
     return $base;
   }
 
@@ -151,5 +159,69 @@ final class ArcanistUnitTestResult extends Phobject {
       'coverage' => $this->getCoverage(),
     );
   }
+
+  public static function getAllResultCodes() {
+    return array(
+      self::RESULT_PASS,
+      self::RESULT_FAIL,
+      self::RESULT_SKIP,
+      self::RESULT_BROKEN,
+      self::RESULT_UNSOUND,
+    );
+  }
+
+  public static function getResultCodeName($result_code) {
+    $spec = self::getResultCodeSpec($result_code);
+    if (!$spec) {
+      return null;
+    }
+    return idx($spec, 'name');
+  }
+
+  public static function getResultCodeDescription($result_code) {
+    $spec = self::getResultCodeSpec($result_code);
+    if (!$spec) {
+      return null;
+    }
+    return idx($spec, 'description');
+  }
+
+  private static function getResultCodeSpec($result_code) {
+    $specs = self::getResultCodeSpecs();
+    return idx($specs, $result_code);
+  }
+
+  private static function getResultCodeSpecs() {
+    return array(
+      self::RESULT_PASS => array(
+        'name' => pht('Pass'),
+        'description' => pht(
+          'The test passed.'),
+      ),
+      self::RESULT_FAIL => array(
+        'name' => pht('Fail'),
+        'description' => pht(
+          'The test failed.'),
+      ),
+      self::RESULT_SKIP => array(
+        'name' => pht('Skip'),
+        'description' => pht(
+          'The test was not executed.'),
+      ),
+      self::RESULT_BROKEN => array(
+        'name' => pht('Broken'),
+        'description' => pht(
+          'The test failed in an abnormal or severe way. For example, the '.
+          'harness crashed instead of reporting a failure.'),
+      ),
+      self::RESULT_UNSOUND => array(
+        'name' => pht('Unsound'),
+        'description' => pht(
+          'The test failed, but this change is probably not what broke it. '.
+          'For example, it might have already been failing.'),
+      ),
+    );
+  }
+
 
 }
