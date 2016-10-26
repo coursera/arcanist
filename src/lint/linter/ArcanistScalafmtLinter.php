@@ -30,18 +30,34 @@ final class ArcanistScalafmtLinter extends ArcanistExternalLinter {
   }
 
   protected function getMandatoryFlags() {
-    return array('--test');
+    return array(
+      '--config', $this->configPath,
+      '--test',
+      '--files'
+    );
   }
 
   protected function parseLinterOutput($path, $err, $stdout, $stderr) {
-    return array(
-      id(new ArcanistLintMessage())
-        ->setName($this->getLinterName())
-        ->setPath($path)
-        ->setCode($this->getLinterName())
-        ->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR)
-        ->setDescription('Incorrectly formatted file: ' . $path)
+    $console = PhutilConsole::getConsole();
+    $console->writeLog(
+      "Parsing scalafmt output:\n  err: %s\n  stdout: %s\n  stderr: %s\n",
+      $err,
+      $stdout,
+      $stderr
     );
+
+    if ($err != 0) {
+      return array(
+        id(new ArcanistLintMessage())
+          ->setName($this->getLinterName())
+          ->setPath($path)
+          ->setCode($this->getLinterName())
+          ->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR)
+          ->setDescription('Incorrectly formatted file: ' . $path)
+      );
+    } else {
+      return array();
+    }
   }
 
   public function getLinterConfigurationOptions() {
