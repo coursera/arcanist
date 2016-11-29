@@ -26,14 +26,13 @@ final class ArcanistScalafmtLinter extends ArcanistExternalLinter {
   }
 
   public function getInstallInstructions() {
-    return 'Run `brew install olafurpg/scalafmt/scalafmt`';
+    return 'Install using Homebrew: `brew install olafurpg/scalafmt/scalafmt`';
   }
 
   protected function getMandatoryFlags() {
     return array(
       '--config', $this->configPath,
-      '--test',
-      '--files'
+      '-f'
     );
   }
 
@@ -46,14 +45,20 @@ final class ArcanistScalafmtLinter extends ArcanistExternalLinter {
       $stderr
     );
 
-    if ($err != 0) {
+    $originalText = Filesystem::readFile($path);
+    $replacementText = $stdout;
+
+    if ($originalText !== $replacementText) {
       return array(
         id(new ArcanistLintMessage())
-          ->setName($this->getLinterName())
           ->setPath($path)
-          ->setCode($this->getLinterName())
-          ->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR)
-          ->setDescription('Incorrectly formatted file: ' . $path)
+          ->setLine(1)
+          ->setChar(1)
+          ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
+          ->setName($this->getLinterName())
+          ->setDescription('File needs to be reformatted with scalafmt')
+          ->setOriginalText($originalText)
+          ->setReplacementText($replacementText)
       );
     } else {
       return array();
