@@ -56,9 +56,13 @@ final class ArcanistScalafmtLinter extends ArcanistExternalLinter {
           ->setChar(1)
           ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
           ->setName($this->getLinterName())
-          ->setDescription('File needs to be reformatted with scalafmt')
           ->setOriginalText($originalText)
-          ->setReplacementText($replacementText)
+          ->setReplacementText($replacementText),
+        id(new ArcanistLintMessage())
+          ->setPath($path)
+          ->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR)
+          ->setName($this->getLinterName())
+          ->setDescription('File needs to be reformatted with scalafmt')
       );
     } else {
       return array();
