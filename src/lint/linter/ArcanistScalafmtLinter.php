@@ -56,6 +56,7 @@ final class ArcanistScalafmtLinter extends ArcanistExternalLinter {
           ->setChar(1)
           ->setSeverity(ArcanistLintSeverity::SEVERITY_AUTOFIX)
           ->setName($this->getLinterName())
+          ->setDescription('Accept Arcanist\'s autofixes for this file, e.g. `arc lint --apply-patches`')
           ->setOriginalText($originalText)
           ->setReplacementText($replacementText),
         id(new ArcanistLintMessage())
