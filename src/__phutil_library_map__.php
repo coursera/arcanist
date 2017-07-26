@@ -323,7 +323,6 @@ phutil_register_library_map(array(
     'ArcanistRuboCopLinterTestCase' => 'lint/linter/__tests__/ArcanistRuboCopLinterTestCase.php',
     'ArcanistRubyLinter' => 'lint/linter/ArcanistRubyLinter.php',
     'ArcanistRubyLinterTestCase' => 'lint/linter/__tests__/ArcanistRubyLinterTestCase.php',
-    'ArcanistScalafmtLinter' => 'lint/linter/ArcanistScalafmtLinter.php',
     'ArcanistScalastyleLinter' => 'lint/linter/ArcanistScalastyleLinter.php',
     'ArcanistScriptAndRegexLinter' => 'lint/linter/ArcanistScriptAndRegexLinter.php',
     'ArcanistSelfClassReferenceXHPASTLinterRule' => 'lint/linter/xhpast/rules/ArcanistSelfClassReferenceXHPASTLinterRule.php',
