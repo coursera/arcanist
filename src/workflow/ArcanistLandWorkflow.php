@@ -25,6 +25,14 @@ final class ArcanistLandWorkflow extends ArcanistWorkflow {
   private $revision;
   private $messageFile;
 
+  private $deployWindowsBlacklist;
+  private $deployWindowsStrategy;
+  const DEPLOY_WINDOW_BLACKLIST_CONFIG_KEY = 'arc.land.validate.deploy_windows.blacklist';
+  const DEPLOY_WINDOW_STRATEGY_CONFIG_KEY = 'arc.land.validate.deploy_windows.strategy';
+  const DEPLOY_WINDOW_STRATEGY_WARN = 'warn';
+  const DEPLOY_WINDOW_STRATEGY_REJECT = 'reject';
+  const DEPLOY_WINDOW_SUPPORTED_STRATEGIES = array( self::DEPLOY_WINDOW_STRATEGY_WARN, self::DEPLOY_WINDOW_STRATEGY_REJECT );
+
   const REFTYPE_BRANCH = 'branch';
   const REFTYPE_BOOKMARK = 'bookmark';
 
@@ -327,6 +335,7 @@ EOTEXT
       $this->merge();
     }
 
+    $this->handleDeployWinwdows();
     $this->push();
 
     if (!$this->keepBranch) {
@@ -562,6 +571,19 @@ EOTEXT
     }
 
     $this->oldBranch = $this->getBranchOrBookmark();
+
+    $this->deployWindowsBlacklist = nonempty(
+      $this->getConfigFromAnySource(self::DEPLOY_WINDOW_BLACKLIST_CONFIG_KEY),
+      array());
+
+    $deployWindowsDefaultStrategy = nonempty(
+      $this->getConfigFromAnySource(self::DEPLOY_WINDOW_STRATEGY_CONFIG_KEY),
+      self::DEPLOY_WINDOW_STRATEGY_WARN);
+    if (!in_array($deployWindowsDefaultStrategy, self::DEPLOY_WINDOW_SUPPORTED_STRATEGIES)) {
+      $deployWindowsDefaultStrategy = self::DEPLOY_WINDOW_STRATEGY_WARN;
+      echo pht("Unsupported deploy window strategy, defaulting to '%s'.", $deployWindowsDefaultStrategy), "\n";
+    }
+    $this->deployWindowsStrategy = $deployWindowsDefaultStrategy;
   }
 
   private function validate() {
@@ -1234,6 +1256,44 @@ EOTEXT
     }
   }
 
+  private function handleDeployWinwdows() {
+    // 1. Is the current time in a blacklisted window?
+    $isInFreezeWindow = $this->isInDeployWindows($this->deployWindowsBlacklist, time());
+
+    /**
+     * If in window, depending on the strategy:
+     *  strategy=warn: ask user to confirm or exit
+     *  strategy=reject: simply reject
+     */
+    $alwaysReject = $this->deployWindowsStrategy === self::DEPLOY_WINDOW_STRATEGY_REJECT;
+    if ($isInFreezeWindow) {
+      $inFreezePeriodMessage = pht(
+        "Freeze period is in effect as defined by:\n\n\t%s",
+        implode("\n\t", $this->deployWindowsBlacklist));
+
+      if ($alwaysReject) {
+        echo $inFreezePeriodMessage, "\n";
+        throw new ArcanistUsageException(
+          pht('This project is configured to prohibit landing changes during freeze periods.'));
+      }
+
+      $proceed = phutil_console_confirm($inFreezePeriodMessage . "\n\nContinue anyway?");
+      if (!$proceed) {
+        throw new ArcanistUserAbortException("Abort landing change.");
+      }
+    }
+  }
+
+  /**
+   * Takes dictionary of blacklist windows and determines if time is in the windows.
+   * @return True if $time is in any of those windows
+   */
+  private function isInDeployWindows($windows, $time) {
+    foreach($windows as $window) {
+      return Expression::isDue($window, $time);
+    }
+  }
+
   private function push() {
     $repository_api = $this->getRepositoryAPI();
 
@@ -1546,6 +1606,14 @@ EOTEXT
   public function buildEngineMessage(ArcanistLandEngine $engine) {
     // TODO: This is oh-so-gross.
     $this->findRevision();
+
+    /**
+     * FIXME (kchen): The origin code here is super unintuitive because `buildEngineMessage` is a hack
+     * to add lifecycle hooks in `ArcanistGitLandEngine`, which gets executed if it's git but the logic
+     * is duplicated again if it's `GitSvn` or any other engine. There are no other integration points
+     * supporting user defined callback at this point.
+     */
+    $this->handleDeployWinwdows();
     $engine->setCommitMessageFile($this->messageFile);
   }
 
