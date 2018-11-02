@@ -103,13 +103,6 @@ final class ArcanistSettings extends Phobject {
         'default' => '"warn"',
         'example' => '"warn"',
       ),
-      'arc.land.validate.freeze.disallowed' => array(
-        'type' => 'string',
-        'help' => pht(
-          'The default strategy to use when arc land updates the feature '.
-          'branch. Supports "rebase" and "merge" strategies.'),
-        'example' => '"rebase"',
-      ),
       'arc.lint.cache' => array(
         'type' => 'bool',
         'help' => pht(
