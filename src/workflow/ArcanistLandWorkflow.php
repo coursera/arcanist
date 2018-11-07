@@ -30,8 +30,7 @@ final class ArcanistLandWorkflow extends ArcanistWorkflow {
   const DEPLOY_WINDOW_BLACKLIST_CONFIG_KEY = 'arc.land.validate.deploy_windows.blacklist';
   const DEPLOY_WINDOW_STRATEGY_CONFIG_KEY = 'arc.land.validate.deploy_windows.strategy';
   const DEPLOY_WINDOW_STRATEGY_WARN = 'warn';
-  const DEPLOY_WINDOW_STRATEGY_REJECT = 'reject';
-  const DEPLOY_WINDOW_SUPPORTED_STRATEGIES = array( self::DEPLOY_WINDOW_STRATEGY_WARN, self::DEPLOY_WINDOW_STRATEGY_REJECT );
+  const DEPLOY_WINDOW_SUPPORTED_STRATEGIES = array( self::DEPLOY_WINDOW_STRATEGY_WARN );
 
   const REFTYPE_BRANCH = 'branch';
   const REFTYPE_BOOKMARK = 'bookmark';
@@ -1258,24 +1257,16 @@ EOTEXT
 
   private function handleDeployWinwdows() {
     // 1. Is the current time in a blacklisted window?
-    $isInFreezeWindow = $this->isInDeployWindows($this->deployWindowsBlacklist, time());
+    $isInFreezeWindow = $this->isInBlacklistedWindows($this->deployWindowsBlacklist, time());
 
     /**
      * If in window, depending on the strategy:
      *  strategy=warn: ask user to confirm or exit
-     *  strategy=reject: simply reject
      */
-    $alwaysReject = $this->deployWindowsStrategy === self::DEPLOY_WINDOW_STRATEGY_REJECT;
-    if ($isInFreezeWindow) {
+    if ($isInFreezeWindows) {
       $inFreezePeriodMessage = pht(
         "Freeze period is in effect as defined by:\n\n\t%s",
         implode("\n\t", $this->deployWindowsBlacklist));
-
-      if ($alwaysReject) {
-        echo $inFreezePeriodMessage, "\n";
-        throw new ArcanistUsageException(
-          pht('This project is configured to prohibit landing changes during freeze periods.'));
-      }
 
       $proceed = phutil_console_confirm($inFreezePeriodMessage . "\n\nContinue anyway?");
       if (!$proceed) {
@@ -1288,7 +1279,7 @@ EOTEXT
    * Takes dictionary of blacklist windows and determines if time is in the windows.
    * @return True if $time is in any of those windows
    */
-  private function isInDeployWindows($windows, $time) {
+  private function isInBlacklistedWindows($windows, $time) {
     foreach($windows as $window) {
       return Expression::isDue($window, $time);
     }

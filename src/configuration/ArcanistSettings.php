@@ -99,7 +99,7 @@ final class ArcanistSettings extends Phobject {
         'type' => 'string',
         'help' => pht(
           'The strategy to execute when trying to land a change during blacklisted windows.'.
-          'Supports "warn" and "reject"'),
+          'Supports "warn" only for now'),
         'default' => '"warn"',
         'example' => '"warn"',
       ),
