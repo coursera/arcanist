@@ -87,6 +87,22 @@ final class ArcanistSettings extends Phobject {
           'branch. Supports "rebase" and "merge" strategies.'),
         'example' => '"rebase"',
       ),
+      'arc.land.validate.deploy_windows.blacklist' => array(
+        'type' => 'list',
+        'help' => pht(
+          'A list of disallowed windows, in cron syntax, when it triggers deploy window strategy'.
+          'handler. See https://crontab.guru'),
+        'default' => array(),
+        'example' => '["* * * * 6", "* * * * 1", "* * 25 12 *"]',
+      ),
+      'arc.land.validate.deploy_windows.strategy' => array(
+        'type' => 'string',
+        'help' => pht(
+          'The strategy to execute when trying to land a change during blacklisted windows.'.
+          'Supports "warn" only for now'),
+        'default' => '"warn"',
+        'example' => '"warn"',
+      ),
       'arc.lint.cache' => array(
         'type' => 'bool',
         'help' => pht(
