@@ -1257,7 +1257,7 @@ EOTEXT
 
   private function handleDeployWinwdows() {
     // 1. Is the current time in a blacklisted window?
-    $isInFreezeWindow = $this->isInBlacklistedWindows($this->deployWindowsBlacklist, time());
+    $isInFreezeWindows = $this->isInBlacklistedWindows($this->deployWindowsBlacklist, time());
 
     /**
      * If in window, depending on the strategy:
