@@ -1263,15 +1263,19 @@ EOTEXT
      * If in window, depending on the strategy:
      *  strategy=warn: ask user to confirm or exit
      */
-    if ($isInFreezeWindows) {
-      $inFreezePeriodMessage = pht(
-        "Freeze period is in effect as defined by:\n\n\t%s",
-        implode("\n\t", $this->deployWindowsBlacklist));
+    // Checking for positive case instead to avoid some weird issues around undefined variable
+    if (!empty($isInFreezeWindows)) {
+      return;
+    }
 
-      $proceed = phutil_console_confirm($inFreezePeriodMessage . "\n\nContinue anyway?");
-      if (!$proceed) {
-        throw new ArcanistUserAbortException("Abort landing change.");
-      }
+    // blacklisted windows are not empty and we are currently in one of them
+    $inFreezePeriodMessage = pht(
+      "Freeze period is in effect as defined by:\n\n\t%s",
+      implode("\n\t", $this->deployWindowsBlacklist));
+
+    $proceed = phutil_console_confirm($inFreezePeriodMessage . "\n\nContinue anyway?");
+    if (!$proceed) {
+      throw new ArcanistUserAbortException("Abort landing change.");
     }
   }
 
@@ -1283,6 +1287,8 @@ EOTEXT
     foreach($windows as $window) {
       return Expression::isDue($window, $time);
     }
+
+    return false;
   }
 
   private function push() {
